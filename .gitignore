@@ -1,4 +1,16 @@
+# Dependencias
 node_modules
+.pnp
+.pnp.js
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Variables de entorno (NUNCA subir secretos al repo)
 .env
@@ -9,3 +21,29 @@ server/.env.*
 
 # Build del frontend
 dist
+dist-ssr
+*.local
+
+# Cache de build / TypeScript
+*.tsbuildinfo
+.vite
+.cache
+.eslintcache
+
+# Archivos compilados de configuración (se generan desde los .ts)
+vite.config.js
+vite.config.d.ts
+
+# Editores e IDEs
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
