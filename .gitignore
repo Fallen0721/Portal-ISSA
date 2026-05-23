@@ -1,1 +1,11 @@
 node_modules
+
+# Variables de entorno (NUNCA subir secretos al repo)
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+
+# Build del frontend
+dist
