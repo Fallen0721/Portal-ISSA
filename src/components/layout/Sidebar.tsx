@@ -45,6 +45,12 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       roles: ["personas"],
     },
     {
+      to: "/danos",
+      label: "Gestión Comercial",
+      icon: FileText,
+      roles: ["daños"],
+    },
+    {
       to: "/ventas",
       label: "Gestión Comercial",
       icon: FileText,

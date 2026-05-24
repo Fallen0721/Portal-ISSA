@@ -11,6 +11,7 @@ import { OpcionesPage } from "../pages/OpcionesPage";
 import { PersonasLayout } from "../pages/personas/PersonasLayout";
 import { GestionVidaPage } from "../pages/personas/GestionVidaPage";
 import { GestionSaludPage } from "../pages/personas/GestionSaludPage";
+import { RiesgosGeneralesPage } from "../pages/danos/RiesgosGeneralesPage";
 import { useAuth } from "../hooks/useAuth";
 import { getDefaultRouteForRole } from "../services/auth.service";
 
@@ -43,6 +44,10 @@ export const AppRouter = () => {
               <Route path="vida" element={<GestionVidaPage />} />
               <Route path="salud" element={<GestionSaludPage />} />
             </Route>
+          </Route>
+
+          <Route element={<RequireAuth allowedRoles={["daños", "admin"]} />}>
+            <Route path="/danos" element={<RiesgosGeneralesPage />} />
           </Route>
 
           <Route

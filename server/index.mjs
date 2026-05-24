@@ -23,6 +23,9 @@ import { canalesRouter } from "./routes/canales.mjs";
 import { ramosRouter } from "./routes/ramos.mjs";
 import { ventasVidaRouter } from "./routes/ventas-vida.mjs";
 import { ventasSaludRouter } from "./routes/ventas-salud.mjs";
+import { ventasGeneralesRouter } from "./routes/ventas-generales.mjs";
+import { tiposRouter } from "./routes/tipos.mjs";
+import { tiposGestionRouter } from "./routes/tipos-gestion.mjs";
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -101,6 +104,9 @@ app.use("/api/canales", canalesRouter);
 app.use("/api/ramos", ramosRouter);
 app.use("/api/ventas-vida", ventasVidaRouter);
 app.use("/api/ventas-salud", ventasSaludRouter);
+app.use("/api/ventas-generales", ventasGeneralesRouter);
+app.use("/api/tipos", tiposRouter);
+app.use("/api/tipos-gestion", tiposGestionRouter);
 app.use("/api", (_req, res) => {
   sendError(res, 404, "Ruta API no encontrada");
 });

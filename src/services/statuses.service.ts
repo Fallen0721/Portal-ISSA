@@ -1,9 +1,11 @@
-import { StatusGestion, StatusGestionInput } from "../types/models";
+import { StatusArea, StatusGestion, StatusGestionInput } from "../types/models";
 import { apiRequest } from "./api.service";
 
 export const StatusesService = {
-  getAll: async (): Promise<StatusGestion[]> =>
-    apiRequest<StatusGestion[]>("/api/statuses"),
+  getAll: async (area?: StatusArea): Promise<StatusGestion[]> =>
+    apiRequest<StatusGestion[]>(
+      area ? `/api/statuses?area=${encodeURIComponent(area)}` : "/api/statuses",
+    ),
 
   create: async (input: StatusGestionInput): Promise<StatusGestion> =>
     apiRequest<StatusGestion>("/api/statuses", {

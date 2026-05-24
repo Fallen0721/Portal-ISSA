@@ -187,10 +187,13 @@ const schemaStatements = [
   CREATE TABLE IF NOT EXISTS estados_gestion (
     id CHAR(36) PRIMARY KEY,
     tipo_estado VARCHAR(20) NOT NULL,
+    area VARCHAR(60) NOT NULL DEFAULT 'comercial',
+    etapa VARCHAR(120) NULL,
+    es_cierre TINYINT(1) NOT NULL DEFAULT 0,
     nombre VARCHAR(190) NOT NULL,
     creado_en DATETIME NOT NULL,
     actualizado_en DATETIME NOT NULL,
-    UNIQUE KEY uq_estados_gestion_tipo_nombre (tipo_estado, nombre)
+    UNIQUE KEY uq_estados_gestion_area_nombre (area, nombre)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `,
   `
@@ -352,6 +355,58 @@ const schemaStatements = [
     CONSTRAINT fk_ventas_salud_usuario
       FOREIGN KEY (usuario_propietario_id) REFERENCES usuarios(id)
       ON DELETE RESTRICT
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `,
+  `
+  CREATE TABLE IF NOT EXISTS ventas_generales (
+    id                   CHAR(36) PRIMARY KEY,
+    numero_poliza        VARCHAR(120) NULL,
+    fecha_ingreso        DATETIME NOT NULL,
+    fecha_vigencia       DATETIME NULL,
+    fecha_cierre         DATETIME NULL,
+    asegurado            VARCHAR(190) NOT NULL,
+    tipo                 VARCHAR(80) NOT NULL,
+    tipo_gestion         VARCHAR(120) NULL,
+    producto             VARCHAR(190) NOT NULL,
+    ramo                 VARCHAR(190) NULL,
+    compania             VARCHAR(190) NOT NULL,
+    estado               VARCHAR(80) NOT NULL,
+    moneda               VARCHAR(10) NOT NULL,
+    suma_asegurada       DECIMAL(15,2) NOT NULL DEFAULT 0,
+    prima_neta           DECIMAL(15,2) NULL,
+    prima_planeada       DECIMAL(15,2) NULL,
+    prima_basica         DECIMAL(15,2) NULL,
+    agente               VARCHAR(190) NULL,
+    alianza              VARCHAR(190) NULL,
+    oficial_negocios     VARCHAR(190) NULL,
+    canal                VARCHAR(80) NOT NULL,
+    observaciones        TEXT NULL,
+    vendedor_nombre      VARCHAR(190) NULL,
+    creado_por_nombre    VARCHAR(190) NOT NULL,
+    usuario_propietario_id CHAR(36) NOT NULL,
+    creado_en            DATETIME NOT NULL,
+    actualizado_en       DATETIME NOT NULL,
+    INDEX idx_ventas_generales_usuario_propietario_id (usuario_propietario_id),
+    INDEX idx_ventas_generales_fecha_ingreso (fecha_ingreso),
+    CONSTRAINT fk_ventas_generales_usuario
+      FOREIGN KEY (usuario_propietario_id) REFERENCES usuarios(id)
+      ON DELETE RESTRICT
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `,
+  `
+  CREATE TABLE IF NOT EXISTS catalogo_tipos (
+    id            CHAR(36) PRIMARY KEY,
+    nombre        VARCHAR(190) NOT NULL UNIQUE,
+    creado_en     DATETIME NOT NULL,
+    actualizado_en DATETIME NOT NULL
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `,
+  `
+  CREATE TABLE IF NOT EXISTS catalogo_tipos_gestion (
+    id            CHAR(36) PRIMARY KEY,
+    nombre        VARCHAR(190) NOT NULL UNIQUE,
+    creado_en     DATETIME NOT NULL,
+    actualizado_en DATETIME NOT NULL
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `,
   `
@@ -667,6 +722,46 @@ export const initializeDatabase = async () => {
   await ensureColumnExists("bitacora_ventas", "finalizada", "TINYINT(1) NOT NULL DEFAULT 0");
   await ensureColumnExists("bitacora_ventas", "finalizada_en", "DATETIME NULL");
   await ensureColumnExists("catalogo_productos", "area", 'VARCHAR(60) NOT NULL DEFAULT "comercial"');
+
+  // Nuevos campos de gestión Personas (Vida/Salud) y Daños
+  for (const tabla of ["ventas_vida", "ventas_salud"]) {
+    await ensureColumnExists(tabla, "fecha_cierre", "DATETIME NULL");
+    await ensureColumnExists(tabla, "prima_neta", "DECIMAL(15,2) NULL");
+    await ensureColumnExists(tabla, "tipo_gestion", "VARCHAR(120) NULL");
+    await ensureColumnExists(tabla, "vendedor_nombre", "VARCHAR(190) NULL");
+  }
+
+  // Status por área y agrupación por etapa (lo existente queda como 'comercial')
+  await ensureColumnExists(
+    "estados_gestion",
+    "area",
+    'VARCHAR(60) NOT NULL DEFAULT "comercial"',
+  );
+  await ensureColumnExists("estados_gestion", "etapa", "VARCHAR(120) NULL");
+  await ensureColumnExists(
+    "estados_gestion",
+    "es_cierre",
+    "TINYINT(1) NOT NULL DEFAULT 0",
+  );
+
+  // La unicidad pasa de (tipo_estado, nombre) a (area, nombre) para que cada
+  // área (comercial/personas/danos) pueda tener nombres de status repetidos.
+  const [areaNombreIdx] = await pool.query(
+    "SHOW INDEX FROM estados_gestion WHERE Key_name = 'uq_estados_gestion_area_nombre'",
+  );
+  if (areaNombreIdx.length === 0) {
+    const [tipoNombreIdx] = await pool.query(
+      "SHOW INDEX FROM estados_gestion WHERE Key_name = 'uq_estados_gestion_tipo_nombre'",
+    );
+    if (tipoNombreIdx.length > 0) {
+      await pool.query(
+        "ALTER TABLE estados_gestion DROP INDEX uq_estados_gestion_tipo_nombre",
+      );
+    }
+    await pool.query(
+      "ALTER TABLE estados_gestion ADD UNIQUE KEY uq_estados_gestion_area_nombre (area, nombre)",
+    );
+  }
 
   for (const status of defaultStatusSeeds) {
     await pool.query(

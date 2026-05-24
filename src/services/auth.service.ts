@@ -56,7 +56,7 @@ export const UsersService = {
 export const getDefaultRouteForRole = (role: AppRole) => {
   switch (role) {
     case "daños":
-      return "/cuadro-vehiculos";
+      return "/danos";
     case "personas":
       return "/personas/vida";
     default:

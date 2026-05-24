@@ -61,18 +61,25 @@ export interface CatalogItem {
   createdAt: string;
 }
 
-export type StatusGestionTipo = "prospecto" | "venta";
+export type StatusGestionTipo = "prospecto" | "venta" | "gestion";
+export type StatusArea = "comercial" | "personas" | "danos";
 
 export interface StatusGestion {
   id: string;
   tipo: StatusGestionTipo;
+  area: StatusArea;
+  etapa?: string | null;
+  esCierre: boolean;
   nombre: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface StatusGestionInput {
-  tipo: StatusGestionTipo;
+  tipo?: StatusGestionTipo;
+  area?: StatusArea;
+  etapa?: string | null;
+  esCierre?: boolean;
   nombre: string;
 }
 
@@ -484,22 +491,31 @@ export const COMPANIAS_VIDA = [
   "CREFISA",
 ] as const;
 
-export interface VentaVida {
+export type GestionArea = "personas" | "danos";
+export type GestionLinea = "vida" | "salud" | "generales";
+
+// Modelo unificado de gestión usado por los módulos Vida, Salud (Personas) y
+// Riesgos Generales (Daños). Las tres tablas comparten esta forma.
+export interface Gestion {
   id: string;
   no: string | null;
   fechaIngreso: string;
   fechaVigencia?: string | null;
+  fechaCierre?: string | null;
   asegurado: string;
   tipo: string;
+  tipoGestion?: string;
   producto: string;
   ramo?: string;
   compania: string;
   status: string;
   moneda: CurrencyCode;
   sumaAsegurada: number;
+  primaNeta?: number | null;
   primaPlaneada: number;
   primaBasica?: number | null;
   creadoPor: string;
+  vendedor: string;
   agente?: string | null;
   alianza?: string | null;
   oficialNegocios?: string;
@@ -508,9 +524,20 @@ export interface VentaVida {
   observaciones?: string;
 }
 
-export interface VentaVidaMutationInput extends Omit<VentaVida, "id" | "ownerUserId" | "creadoPor"> {
+export interface GestionMutationInput
+  extends Omit<Gestion, "id" | "ownerUserId" | "creadoPor" | "vendedor"> {
   ownerUserId?: string;
+  vendedor?: string;
 }
+
+// Alias retrocompatibles: el dashboard y los summaries siguen tipando contra
+// VentaVida / VentaSalud, que ahora son el modelo unificado.
+export type VentaVida = Gestion;
+export type VentaSalud = Gestion;
+export type VentaGenerales = Gestion;
+export type VentaVidaMutationInput = GestionMutationInput;
+export type VentaSaludMutationInput = GestionMutationInput;
+export type VentaGeneralesMutationInput = GestionMutationInput;
 
 export const COMPANIAS_SALUD = [
   "PALIG",
@@ -523,34 +550,6 @@ export const COMPANIAS_SALUD = [
   "SEGUROS DEL PAIS",
   "CONTINENTAL",
 ] as const;
-
-export interface VentaSalud {
-  id: string;
-  no: string | null;
-  fechaIngreso: string;
-  fechaVigencia?: string | null;
-  asegurado: string;
-  tipo: string;
-  producto: string;
-  ramo?: string;
-  compania: string;
-  status: string;
-  moneda: CurrencyCode;
-  sumaAsegurada: number;
-  primaPlaneada: number;
-  primaBasica?: number | null;
-  creadoPor: string;
-  agente?: string | null;
-  alianza?: string | null;
-  oficialNegocios?: string;
-  canal: string;
-  ownerUserId: string;
-  observaciones?: string;
-}
-
-export interface VentaSaludMutationInput extends Omit<VentaSalud, "id" | "ownerUserId" | "creadoPor"> {
-  ownerUserId?: string;
-}
 
 export interface MetaMensualInput {
   vendedorId: string;

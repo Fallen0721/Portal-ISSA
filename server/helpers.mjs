@@ -143,22 +143,26 @@ export const mapCotizacion = (row) => ({
     row.venta_convertida_id ?? row.prospecto_convertido_id ?? undefined,
 });
 
-export const mapVentaVida = (row) => ({
+const mapGestionRow = (row) => ({
   id: row.id,
   no: row.numero_poliza ?? null,
   fechaIngreso: new Date(row.fecha_ingreso).toISOString(),
   fechaVigencia: row.fecha_vigencia ? new Date(row.fecha_vigencia).toISOString() : null,
+  fechaCierre: row.fecha_cierre ? new Date(row.fecha_cierre).toISOString() : null,
   asegurado: row.asegurado,
   tipo: row.tipo,
+  tipoGestion: row.tipo_gestion ?? undefined,
   producto: row.producto,
   ramo: row.ramo ?? undefined,
   compania: row.compania,
   status: row.estado,
   moneda: row.moneda,
   sumaAsegurada: Number(row.suma_asegurada ?? 0),
-  primaPlaneada: Number(row.prima_planeada ?? 0),
+  primaNeta: row.prima_neta != null ? Number(row.prima_neta) : null,
+  primaPlaneada: row.prima_planeada != null ? Number(row.prima_planeada) : 0,
   primaBasica: row.prima_basica != null ? Number(row.prima_basica) : null,
   creadoPor: row.creado_por_nombre,
+  vendedor: row.vendedor_nombre ?? row.creado_por_nombre,
   agente: row.agente ?? null,
   alianza: row.alianza ?? null,
   oficialNegocios: row.oficial_negocios ?? undefined,
@@ -167,29 +171,9 @@ export const mapVentaVida = (row) => ({
   observaciones: row.observaciones ?? undefined,
 });
 
-export const mapVentaSalud = (row) => ({
-  id: row.id,
-  no: row.numero_poliza ?? null,
-  fechaIngreso: new Date(row.fecha_ingreso).toISOString(),
-  fechaVigencia: row.fecha_vigencia ? new Date(row.fecha_vigencia).toISOString() : null,
-  asegurado: row.asegurado,
-  tipo: row.tipo,
-  producto: row.producto,
-  ramo: row.ramo ?? undefined,
-  compania: row.compania,
-  status: row.estado,
-  moneda: row.moneda,
-  sumaAsegurada: Number(row.suma_asegurada ?? 0),
-  primaPlaneada: Number(row.prima_planeada ?? 0),
-  primaBasica: row.prima_basica != null ? Number(row.prima_basica) : null,
-  creadoPor: row.creado_por_nombre,
-  agente: row.agente ?? null,
-  alianza: row.alianza ?? null,
-  oficialNegocios: row.oficial_negocios ?? undefined,
-  canal: row.canal,
-  ownerUserId: row.usuario_propietario_id,
-  observaciones: row.observaciones ?? undefined,
-});
+export const mapVentaVida = mapGestionRow;
+export const mapVentaSalud = mapGestionRow;
+export const mapVentaGenerales = mapGestionRow;
 
 export const mapMeta = (row) => ({
   id: row.id,
@@ -205,6 +189,9 @@ export const mapMeta = (row) => ({
 export const mapStatusGestion = (row) => ({
   id: row.id,
   tipo: row.tipo_estado,
+  area: row.area ?? "comercial",
+  etapa: row.etapa ?? null,
+  esCierre: Boolean(row.es_cierre),
   nombre: row.nombre,
   createdAt: new Date(row.creado_en).toISOString(),
   updatedAt: new Date(row.actualizado_en).toISOString(),
@@ -398,6 +385,20 @@ export const buildUserSearchClause = (search) => {
 export const getUserById = async (id, executor = getPool()) => {
   const [rows] = await executor.query("SELECT * FROM usuarios WHERE id = ? LIMIT 1", [id]);
   return rows[0] ? mapUser(rows[0]) : null;
+};
+
+// Indica si un status (por área + nombre) está marcado como de cierre, para
+// auto-llenar la fecha de cierre cuando la gestión llega a ese estado.
+export const isClosingStatus = async (area, statusName, executor = getPool()) => {
+  const nombre = normalizeText(statusName);
+  if (!nombre) return false;
+
+  const [rows] = await executor.query(
+    "SELECT es_cierre FROM estados_gestion WHERE area = ? AND nombre = ? LIMIT 1",
+    [area, nombre],
+  );
+
+  return Boolean(rows[0]?.es_cierre);
 };
 
 export const resolveOwnerFromVendorName = async (vendedor) => {

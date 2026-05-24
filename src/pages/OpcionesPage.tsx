@@ -1,4 +1,4 @@
-import { Building2, Layers, ListChecks, Network, Package, Target } from "lucide-react";
+import { Building2, Layers, ListChecks, Network, Package, Tag, Target, Workflow } from "lucide-react";
 import { NavLink, Navigate, useParams } from "react-router-dom";
 import { clsx } from "clsx";
 import { MetasSection } from "./MetasPage";
@@ -8,6 +8,8 @@ import { ProductosService } from "../services/productos.service";
 import { CompaniasService } from "../services/companias.service";
 import { CanalesService } from "../services/canales.service";
 import { RamosService } from "../services/ramos.service";
+import { TiposService } from "../services/tipos.service";
+import { TiposGestionService } from "../services/tiposGestion.service";
 
 const sections = [
   {
@@ -27,6 +29,18 @@ const sections = [
     label: "Productos",
     icon: Package,
     description: "Catálogo de productos de seguro",
+  },
+  {
+    key: "tipos",
+    label: "Tipo",
+    icon: Tag,
+    description: "Individual / Corporativo",
+  },
+  {
+    key: "tipos-gestion",
+    label: "Tipo Gestión",
+    icon: Workflow,
+    description: "Tipos de gestión disponibles",
   },
   {
     key: "ramos",
@@ -79,6 +93,26 @@ export const OpcionesPage = () => {
               { value: "daños", label: "Daños" },
             ]}
             areaLabels={{ comercial: "Comercial", vida: "Vida", salud: "Salud", "daños": "Daños" }}
+          />
+        );
+      case "tipos":
+        return (
+          <CatalogSection
+            title="Tipo"
+            description="Configura los tipos disponibles en el formulario de gestión (ej. Individual, Corporativo)."
+            entityLabel="Tipo"
+            service={TiposService}
+            badgeClassName="bg-sky-100 text-sky-800"
+          />
+        );
+      case "tipos-gestion":
+        return (
+          <CatalogSection
+            title="Tipo Gestión"
+            description="Configura los tipos de gestión disponibles en el formulario."
+            entityLabel="Tipo Gestión"
+            service={TiposGestionService}
+            badgeClassName="bg-teal-100 text-teal-800"
           />
         );
       case "ramos":
